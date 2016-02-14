@@ -94,13 +94,13 @@ Limiter.prototype.get = function (readOnly, fn) {
       });
   }
 
-  function decr(res) {
+  function decr(readOnly, res) {
     var n = ~~res[0];
     var max = ~~res[1];
     var ex = ~~res[2];
     var dateNow = Date.now();
 
-    if (n <= 0) return done();
+    if (n <= 0 || readOnly === true) return done();
 
     function done() {
       fn(null, {
@@ -128,9 +128,7 @@ Limiter.prototype.get = function (readOnly, fn) {
 		  db.mget([count, limit, reset], function (err, res) {
 			  if (err) return fn(err);
 			  if (!res[0] && res[0] !== 0) return create();
-              if (readOnly !== true) {
-    			  decr(res);                  
-              }
+              decr(readOnly, res);                  
 		  });
 	  });
   }

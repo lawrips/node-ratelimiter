@@ -58,10 +58,10 @@ Limiter.prototype.inspect = function () {
  * @api public
  */
 
-Limiter.prototype.get = function (readOnly, refn) {
+Limiter.prototype.get = function (readOnly, fn) {
   // noIncrement is optional. If not supplied, it means only a function was passed
-  if (refn === undefined) {
-      refn = readOnly;
+  if (fn === undefined) {
+      fn = readOnly;
       readOnly = null;
   }
   

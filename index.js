@@ -135,7 +135,7 @@ Limiter.prototype.get = function (readOnly, fn) {
 	  });
   }
 
-  mget();
+  mget(readOnly);
 };
 
 /**

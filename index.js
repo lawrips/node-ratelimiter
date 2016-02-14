@@ -53,11 +53,18 @@ Limiter.prototype.inspect = function () {
  *  - limit:<id>:limit
  *  - limit:<id>:reset
  *
+ * @param {Boolean} readOnly - optional parameter, if set to true the cache will not be updated / decremented
  * @param {Function} fn
  * @api public
  */
 
-Limiter.prototype.get = function (fn) {
+Limiter.prototype.get = function (readOnly, refn) {
+  // noIncrement is optional. If not supplied, it means only a function was passed
+  if (refn === undefined) {
+      refn = readOnly;
+      readOnly = null;
+  }
+  
   var count = this.prefix + 'count';
   var limit = this.prefix + 'limit';
   var reset = this.prefix + 'reset';
@@ -77,7 +84,7 @@ Limiter.prototype.get = function (fn) {
 
         // If the request has failed, it means the values already
         // exist in which case we need to get the latest values.
-        if (isFirstReplyNull(res)) return mget();
+        if (isFirstReplyNull(res)) return mget(readOnly);
 
         fn(null, {
           total: max,
@@ -109,20 +116,21 @@ Limiter.prototype.get = function (fn) {
       .pexpire([reset, ex * 1000 - dateNow])
       .exec(function (err, res) {
         if (err) return fn(err);
-        if (isFirstReplyNull(res)) return mget();
+        if (isFirstReplyNull(res)) return mget(readOnly);
         n = n - 1;
         done();
       });
   }
 
-  function mget() {
+  function mget(readOnly) {
 	  db.watch([count], function (err) {
 		  if (err) return fn(err);
 		  db.mget([count, limit, reset], function (err, res) {
 			  if (err) return fn(err);
 			  if (!res[0] && res[0] !== 0) return create();
-
-			  decr(res);
+              if (readOnly !== true) {
+    			  decr(res);                  
+              }
 		  });
 	  });
   }
